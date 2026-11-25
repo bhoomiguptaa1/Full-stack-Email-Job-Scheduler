@@ -1,0 +1,149 @@
+// Prisma Schema for ReachInbox Email Job Scheduler
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum JobStatus {
+  SCHEDULED
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum RecurrenceType {
+  NONE
+  EVERY_HOUR
+  DAILY
+  WEEKLY
+  MONTHLY
+  CUSTOM_REPEAT
+}
+
+model User {
+  id                        String          @id @default(uuid())
+  email                     String          @unique
+  name                      String?
+  avatarUrl                 String?
+  role                      Role            @default(USER)
+  googleId                  String?         @unique
+  slackId                   String?         @unique
+  slackAccessToken          String?
+  slackTeamName             String?
+  slackChannelId            String?
+  slackNotificationsEnabled Boolean         @default(false)
+  passwordHash              String?
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  emailJobs                 EmailJob[]
+  apiKeys                   ApiKey[]
+  senders                   SenderAccount[]
+
+  @@map("users")
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("api_keys")
+}
+
+model SenderAccount {
+  id          String     @id @default(uuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       String
+  name        String?
+  hourlyLimit Int        @default(50)
+  minDelayMs  Int        @default(0)
+  isActive    Boolean    @default(true)
+  isDefault   Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  emailJobs   EmailJob[]
+
+  @@unique([userId, email])
+  @@index([userId, isActive])
+  @@map("sender_accounts")
+}
+
+model EmailJob {
+  id               String         @id @default(uuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  senderId         String?
+  sender           SenderAccount? @relation(fields: [senderId], references: [id], onDelete: SetNull)
+  senderEmail      String?
+
+  // Job configuration
+  recipientEmail   String
+  subject          String
+  body             String         @db.Text
+  status           JobStatus      @default(SCHEDULED)
+  idempotencyKey   String?
+
+  // Scheduling details (BullMQ)
+  bullJobId        String?        @unique
+  bullRepeatJobKey String?
+  scheduledFor     DateTime
+  delayMs          Int            @default(0)
+  recurrence       RecurrenceType @default(NONE)
+  repeatIntervalMs Int?
+
+  // Execution tracking
+  sentAt           DateTime?
+  failedAt         DateTime?
+  failureReason    String?        @db.Text
+  retryCount       Int            @default(0)
+  maxRetries       Int            @default(3)
+  rateLimitedCount Int            @default(0)
+
+  // Sandbox preview details (Ethereal)
+  previewUrl       String?
+
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  logs             EmailJobLog[]
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, status])
+  @@index([userId, scheduledFor])
+  @@index([senderId, status])
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([createdAt])
+  @@map("email_jobs")
+}
+
+model EmailJobLog {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       EmailJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  event     String   // e.g., "SCHEDULED", "PROCESSING", "RATE_LIMITED", "RETRY_SCHEDULED", "COMPLETED", "FAILED", "CANCELLED", "RESCHEDULED"
+  message   String?
+  metadata  Json?
+  timestamp DateTime @default(now())
+
+  @@index([jobId, timestamp])
+  @@map("email_job_logs")
+}
