@@ -13,7 +13,9 @@
     "start:worker": "node dist/worker.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && npm run build"
   },
   "dependencies": {
     "@bull-board/api": "^6.7.0",
@@ -47,6 +49,9 @@
     "typescript": "^5.6.3"
   },
   "allowScripts": {
-    "msgpackr-extract@3.0.7": true
+    "msgpackr-extract@3.0.7": true,
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "prisma@5.22.0": true
   }
 }

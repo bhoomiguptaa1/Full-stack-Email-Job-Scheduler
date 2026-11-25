@@ -11,10 +11,12 @@ export const ENV = {
   DATABASE_URL:
     process.env.DATABASE_URL ||
     'postgresql://reachinbox_user:reachinbox_password@localhost:5432/reachinbox_db?schema=public',
+  REDIS_URL: process.env.REDIS_URL || '',
   REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
   REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
-  ELASTICSEARCH_NODE: process.env.ELASTICSEARCH_NODE || 'http://localhost:9200',
+  ELASTICSEARCH_NODE:
+    process.env.ELASTICSEARCH_URL || process.env.ELASTICSEARCH_NODE || 'http://localhost:9200',
   ELASTICSEARCH_INDEX: process.env.ELASTICSEARCH_INDEX || 'reachinbox_emails',
   JWT_SECRET: process.env.JWT_SECRET || DEFAULT_JWT_SECRET,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || '',

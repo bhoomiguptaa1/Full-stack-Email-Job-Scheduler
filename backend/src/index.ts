@@ -43,8 +43,14 @@ app.use(express.json({ limit: '1mb' }));
 app.use(morgan(ENV.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // BullMQ Monitoring Dashboard (Bull-Board)
-const bullBoardAdapter = setupBullBoard();
-app.use('/admin/queues', bullBoardAdapter.getRouter());
+try {
+  const bullBoardAdapter = setupBullBoard();
+  app.use('/admin/queues', bullBoardAdapter.getRouter());
+} catch (err) {
+  logger.warn('[Bull-Board] Disabled (UI assets not available in this runtime)', {
+    error: err instanceof Error ? err.message : String(err),
+  });
+}
 
 // API rate limiting + REST API routes
 const apiLimiter = createHttpRateLimiter({
