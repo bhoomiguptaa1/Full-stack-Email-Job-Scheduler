@@ -1,0 +1,23 @@
+const QUEUE_NAMES = {
+  EMAIL_DISPATCH: 'email-dispatch-queue',
+};
+
+const JOB_STATUSES = {
+  SCHEDULED:  'SCHEDULED',
+  PENDING:    'PENDING',
+  PROCESSING: 'PROCESSING',
+  COMPLETED:  'COMPLETED',
+  FAILED:     'FAILED',
+  CANCELLED:  'CANCELLED',
+};
+
+const RECURRENCE_TYPES = {
+  NONE:          'NONE',
+  EVERY_HOUR:    'EVERY_HOUR',
+  DAILY:         'DAILY',
+  WEEKLY:        'WEEKLY',
+  MONTHLY:       'MONTHLY',
+  CUSTOM_REPEAT: 'CUSTOM_REPEAT',
+};
+
+module.exports = { QUEUE_NAMES, JOB_STATUSES, RECURRENCE_TYPES };
