@@ -14,7 +14,7 @@ import {
 export const TOKEN_STORAGE_KEY = 'reachinbox_auth_token';
 
 export const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',

@@ -23,7 +23,19 @@ app.use('/admin/queues', helmet({ contentSecurityPolicy: false }));
 
 app.use(
   cors({
-    origin: Array.from(new Set([ENV.FRONTEND_URL, 'http://localhost:5173'])),
+    origin: (origin, callback) => {
+      const allowed = new Set([
+        ENV.FRONTEND_URL,
+        'http://localhost:5173',
+        'http://localhost:3000',
+      ]);
+      // Allow any *.vercel.app subdomain in production
+      if (!origin || allowed.has(origin) || /^https:\/\/[^.]+\.vercel\.app$/.test(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin ${origin} not allowed`));
+      }
+    },
     credentials: true,
   })
 );
